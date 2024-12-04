@@ -38,6 +38,9 @@ This repository contains an **ESPHome YAML configuration** for monitoring and co
 - PV18-5248 Pro
 - PH18-5248 Pro
 
+## Demo video
+[YouTube](https://youtu.be/0Ef8nHztPZQ)
+
 ## Usage
 
 1. Clone this repository.
