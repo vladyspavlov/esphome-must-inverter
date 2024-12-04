@@ -21,12 +21,22 @@ This repository contains an **ESPHome YAML configuration** for monitoring and co
 ## Prerequisites
 
 - **Hardware**:
-  - ESP32 board recommended (I used WT32-ETH, [AliExpress](https://www.aliexpress.com/item/1005006074972994.html)).
-    It also works with ESP8266.
-  - RS485 to UART board. I used this one: [AliExpress](https://www.aliexpress.com/item/1005001621746811.html)
+  - ESP32 board recommended. It also works with ESP8266.  
+    I used WT32-ETH, [AliExpress](https://www.aliexpress.com/item/1005006074972994.html)
+  - RS485 to UART board.  
+    I used this one: [AliExpress](https://www.aliexpress.com/item/1005001621746811.html)
+  - Optionally: USB cable, if you want to connect using USB port.  
+    **Caution:** It may not work with your specific inverter model.  
+    I used this one: [AliExpress](https://www.aliexpress.com/item/1005002358382000.html). Tested with PH(PV)18-5248 Pro.
+    
 - **Software**:
   - [ESPHome](https://esphome.io/) installed.
   - Home Assistant (optional but recommended).
+
+## Tested models
+
+- PV18-5248 Pro
+- PH18-5248 Pro
 
 ## Usage
 
