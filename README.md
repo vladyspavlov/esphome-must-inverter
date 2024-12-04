@@ -1,4 +1,4 @@
-# Must Solar Inverter ESPHome Monitor
+# Must Solar Hybrid Inverter ESPHome Monitor
 
 This repository contains an **ESPHome YAML configuration** for monitoring and controlling the Must Solar Inverter. The configuration leverages ESP32 with Modbus communication to interact with the inverter, providing detailed insights into its operational parameters and status.
 
