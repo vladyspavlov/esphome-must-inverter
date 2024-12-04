@@ -344,18 +344,13 @@ sensor:
     icon: mdi:flash
 
   - platform: modbus_controller
-    address: 25225
-    name: "Inverter frequency"
-    register_type: holding
-    accuracy_decimals: 1
-    unit_of_measurement: "Hz"
-
-  - platform: modbus_controller
     address: 25226
     name: "Grid frequency"
     register_type: holding
-    accuracy_decimals: 1
+    accuracy_decimals: 2
     unit_of_measurement: "Hz"
+    filters:
+      multiply: 0.01
 
     # MOST INFO
 
