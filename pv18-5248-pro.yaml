@@ -192,12 +192,20 @@ sensor:
     accuracy_decimals: 1
     icon: mdi:flash
 
-# inverter sensors
+  # inverter sensors
   - platform: modbus_controller
     modbus_controller_id: must_inverter
     address: 25201
     register_type: holding
     name: "Inverter Work state"
+    # 0:PowerOn
+    # 1:SelfTest
+    # 2:OffGrid
+    # 3:Grid-Tie
+    # 4:ByPass
+    # 5:Stop
+    # 6:Grid charging
+    # https://gist.github.com/vladyspavlov/5ac21cb58923482eff8e7bbb2d0854b3?permalink_comment_id=5301160#gistcomment-5301160
 
   - platform: modbus_controller
     modbus_controller_id: must_inverter
