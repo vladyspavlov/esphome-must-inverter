@@ -68,6 +68,11 @@ sensor:
     name: "State of Charge"
     unit_of_measurement: "%"
     register_type: holding
+  - platform: mmodbus_controller
+    address: 114
+    name: "State of Health"
+    unit_of_measurement: "%"
+    register_type: holding
   - platform: modbus_controller
     address: 15201
     name: "Charger workstate"
