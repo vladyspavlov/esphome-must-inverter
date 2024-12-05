@@ -40,6 +40,7 @@ This repository contains an **ESPHome YAML configuration** for monitoring and co
 - PV18-3024 VHM (Thanks to [@gjury](https://github.com/gjury))
 - PV18-3224 VPM
 - PV18-1012 VPM (Thanks to [@sstepane](https://github.com/sstepane))
+- PV19-6248 EXP (Thanks to [@sergeysaley](https://github.com/sergeysaley))
 
 ## Demo video
 [YouTube](https://youtu.be/0Ef8nHztPZQ)
