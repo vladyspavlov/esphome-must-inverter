@@ -60,3 +60,7 @@ This repository contains an **ESPHome YAML configuration** for monitoring and co
 ## License
 
 This project is licensed under the MIT License. Feel free to use and modify the code as needed.
+
+## References
+
+https://gist.github.com/vladyspavlov/5ac21cb58923482eff8e7bbb2d0854b3
