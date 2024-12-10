@@ -310,6 +310,7 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: must_inverter
+    value_type: S_WORD
     address: 25213
     name: "Inverter Power"
     register_type: holding
