@@ -9,20 +9,14 @@ substitutions:
 esphome:
   name: ${name}
   min_version: 2024.6.0
-  name_add_mac_suffix: false
   comment: ${device_location}
-  project:
-    name: esphome.web
-    version: dev
 
 esp32:
   board: esp32dev
   framework:
-    type: arduino
+    type: esp-idf
 
 logger:
-
-improv_serial:
 
 wifi:
   networks:
@@ -33,11 +27,6 @@ wifi:
     password: !secret ap_password
 
 captive_portal:
-
-dashboard_import:
-  package_import_url: github://esphome/example-configs/esphome-web/esp32.yaml@main
-  import_full_config: true
-
 
 api:
   encryption:
