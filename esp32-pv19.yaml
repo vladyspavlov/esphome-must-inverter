@@ -63,6 +63,228 @@ modbus_controller:
     setup_priority: -10
     update_interval: 20s
 
+binary_sensor:
+  # CE: - Charger Errors from 15213 (id:charger_error_message))
+  - platform: template
+    name: "CE: Charger hardware protection"
+    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,0)) { return true; } else { return false; }
+
+  - platform: template
+    name: "CE: Over current"
+    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,1)) { return true; } else { return false; }
+
+  - platform: template
+    name: "CE: Current sensor error"
+    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,2)) { return true; } else { return false; }
+
+  - platform: template
+    name: "CE: Over temperature"
+    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,3)) { return true; } else { return false; }
+
+  - platform: template
+    name: "CE: PV voltage is too high"
+    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,4)) { return true; } else { return false; }
+
+  - platform: template
+    name: "CE: PV voltage is too low"
+    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,5)) { return true; } else { return false; }
+
+  - platform: template
+    name: "CE: Battery voltage is too high"
+    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,6)) { return true; } else { return false; }
+
+  - platform: template
+    name: "CE: Battery voltage is too low"
+    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,7)) { return true; } else { return false; }
+
+  - platform: template
+    name: "CE: Current is uncontrollable"
+    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,8)) { return true; } else { return false; }
+
+  - platform: template
+    name: "CE: Parameter error"
+    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,9)) { return true; } else { return false; }
+
+  # CW: - Charger Warnings from 15214 (id:charger_warning_message))
+  - platform: template
+    name: "CW: Fan error"
+    lambda: uint16_t warning = id(charger_warning_message).state; if (bitRead(warning,0)) { return true; } else { return false; }
+
+  # IE: - Inverter Errors from 25261 (id(inverter_error_message_1))
+  - platform: template
+    name: "IE: Fan is locked when inverter is off"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,0)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter transformer over temperature"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,1)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Battery voltage is too high"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,2)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Battery voltage is too low"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,3)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Output short circuited"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,4)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter output voltage is high"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,5)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Overload time out"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,6)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter bus voltage is too high"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,7)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Bus soft start failed"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,8)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Main relay failed"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,9)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter output voltage sensor error"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,10)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter grid voltage sensor error"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,11)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter output current sensor error"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,12)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter grid current sensor error"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,13)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter load current sensor error"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,14)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter grid over current error"
+    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,15)) { return true; } else { return false; }
+
+  # IE: - Inverter Errors from 25262 (id(inverter_error_message_2))
+  - platform: template
+    name: "IE: Inverter radiator over temperature"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,0)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Solar charger battery voltage class error"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,1)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Solar charger current sensor error"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,2)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Solar charger current is uncontrollable"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,3)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter grid voltage is low"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,4)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter grid voltage is high"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,5)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter grid under frequency"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,6)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter grid over frequency"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,7)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter over current protection error"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,8)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter bus voltage is too low"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,9)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter soft start failed"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,10)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Over DC voltage in AC output"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,11)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Battery connection is open"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,12)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter control current sensor error"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,13)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: Inverter output voltage is too low"
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,14)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IE: "
+    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,15)) { return true; } else { return false; }
+
+  # IW: - Inverter Warnings from 25265 (id(inverter_warning_message_1))
+  - platform: template
+    name: "IW: Fan is locked when inverter is on"
+    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,0)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IW: Fan2 is locked when inverter is on"
+    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,1)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IW: Battery is over-charged"
+    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,2)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IW: Low battery"
+    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,3)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IW: Overload"
+    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,4)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IW: Output power derating"
+    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,5)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IW: Solar charger stops due to low battery"
+    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,6)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IW: Solar charger stops due to high PV voltage"
+    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,7)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IW: Solar charger stops due to over load"
+    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,8)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IW: Solar charger over temperature"
+    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,9)) { return true; } else { return false; }
+
+  - platform: template
+    name: "IW: PV charger communication error"
+    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,10)) { return true; } else { return false; }
+
 
 sensor:
   - platform: modbus_controller
@@ -88,40 +310,54 @@ sensor:
     register_type: holding
 
   - platform: modbus_controller
+    id: inverter_error_message_1
     address: 25261
-    name: "Inverter Error message 1"
+#    name: "Inverter Error message 1"
     register_type: holding
+    internal: true
 
   - platform: modbus_controller
+    id: inverter_error_message_2
     address: 25262
-    name: "Inverter Error message 2"
+#    name: "Inverter Error message 2"
     register_type: holding
+    internal: true
 
   - platform: modbus_controller
+    id: inverter_error_message_3
     address: 25263
-    name: "Inverter Error message 3"
+#    name: "Inverter Error message 3"
     register_type: holding
+    internal: true
 
   - platform: modbus_controller
+    id: inverter_warning_message_1
     address: 25265
-    name: "Inverter Warning message 1"
+#    name: "Inverter Warning message 1"
     register_type: holding
+    internal: true
 
   - platform: modbus_controller
+    id: inverter_warning_message_2
     address: 25266
-    name: "Inverter Warning message 2"
+#    name: "Inverter Warning message 2"
     register_type: holding
+    internal: true
 
   - platform: modbus_controller
+    id: charger_error_message
     address: 15213
     bitmask: 0x3ff 
-    name: "Charger Error message"
+#    name: "Charger Error message"
     register_type: holding
+    internal: true
 
   - platform: modbus_controller
+    id: charger_warning_message
     address: 15214
-    name: "Charger Warning message"
+#    name: "Charger Warning message"
     register_type: holding
+    internal: true
 
   - platform: modbus_controller
     address: 15205
