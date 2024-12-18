@@ -35,6 +35,8 @@ This repository contains an **ESPHome YAML configuration** for monitoring and co
 
 ## Tested models
 
+This config is compatible with all PV/PH18 and PV19 series inverters. The following models have been specifically tested either by me or the community:
+
 - PV18-5248 Pro
 - PH18-5248 Pro
 - PV18-3024 VHM (Thanks to [@gjury](https://github.com/gjury))
