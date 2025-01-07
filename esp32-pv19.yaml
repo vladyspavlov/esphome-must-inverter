@@ -43,6 +43,102 @@ switch:
   - platform: restart
     name: "${device_name} restart"
 
+  - platform: template
+    name: "SysSet: Overload Restart Forbid"
+    lambda: uint16_t settings = id(system_settings).state; if (bitRead(settings,0)) { return true; } else { return false; }
+    turn_on_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state + 1;
+    turn_off_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state - 1;
+
+  - platform: template
+    name: "SysSet: Overtemp Restart Forbid"
+    lambda: uint16_t settings = id(system_settings).state; if (bitRead(settings,1)) { return true; } else { return false; }
+    turn_on_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state + 2;
+    turn_off_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state - 2;
+
+  - platform: template    
+    name: "SysSet: Overload Bypass Forbid"
+    lambda: uint16_t settings = id(system_settings).state; if (bitRead(settings,2)) { return true; } else { return false; }
+    turn_on_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state + 4;
+    turn_off_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state - 4;
+
+  - platform: template
+    name: "SysSet: Forbid Page turn"
+    lambda: uint16_t settings = id(system_settings).state; if (bitRead(settings,3)) { return true; } else { return false; }
+    turn_on_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state + 8;
+    turn_off_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state - 8;
+
+  - platform: template
+    name: "SysSet: Grid Buzz Enable"
+    lambda: uint16_t settings = id(system_settings).state; if (bitRead(settings,4)) { return true; } else { return false; }
+    turn_on_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state + 16;
+    turn_off_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state - 16  ;
+
+  - platform: template
+    name: "SysSet: Buzz Forbid"
+    lambda: uint16_t settings = id(system_settings).state; if (bitRead(settings,5)) { return true; } else { return false; }
+    turn_on_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state + 32;
+    turn_off_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state - 32  ;
+
+  - platform: template
+    name: "SysSet: LCD light"
+    lambda: uint16_t settings = id(system_settings).state; if (bitRead(settings,6)) { return true; } else { return false; }
+    turn_on_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state + 64;
+    turn_off_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state - 64;
+
+  - platform: template
+    name: "SysSet: Record Fault Forbid"
+    lambda: uint16_t settings = id(system_settings).state; if (bitRead(settings,7)) { return true; } else { return false; }
+    turn_on_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state + 128;
+    turn_off_action:
+       - number.set:
+          id: system_settings
+          value: !lambda return id(system_settings).state - 128;
+
 uart:
   id: mod_bus
   tx_pin: ${tx_pin}
@@ -860,3 +956,11 @@ number:
     lambda: "return x * 0.1; "
     write_lambda: |-
       return x * 10 ;
+
+  - platform: modbus_controller
+    id: system_settings
+#    name: "System Settings"
+    address: 20142
+    value_type: U_WORD
+    internal: True
+    
