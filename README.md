@@ -32,6 +32,12 @@ This repository contains an **ESPHome YAML configuration** for monitoring and co
 - **Software**:
   - [ESPHome](https://esphome.io/) installed.
   - Home Assistant (optional but recommended).
+ 
+## Connection scheme
+
+Thanks to [@Rogero-](https://github.com/Rogero-). Here you can find more details and photos: [Discussion #9](https://github.com/vladyspavlov/esphome-must-inverter/discussions/9#discussioncomment-11593361).
+
+<img src="https://github.com/user-attachments/assets/f21a1027-218e-4f2c-9b26-354641475daa" alt="Connection scheme picture" width="500" />
 
 ## Tested models
 
