@@ -1,4 +1,4 @@
-Description of the identifiers in the 41 setting on the PV18/PH18 series
+Description of the identifiers in the 41 setting on the PV18/PH18 series. Used for the BMS communication using CAN or RS485.
 
 | ID      | Description              | Communication Protocol  |
 |---------|--------------------------|-------------------------|
