@@ -10,6 +10,7 @@ substitutions:
 esphome:
   name: inverter-monitor
   comment: "Inverter monitor"
+  min_version: 2025.7.0
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -48,12 +49,6 @@ web_server:
 switch:
   - platform: restart
     name: "${device_name} restart"
-
-# Temprorary external_components
-external_components:
-  - source: github://pr#9425
-    components: [usb_uart]
-    refresh: 1h
 
 usb_host:
   devices:
