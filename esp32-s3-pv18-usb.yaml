@@ -79,11 +79,24 @@ modbus_controller:
     update_interval: ${updates}
 
 sensor:
+  - platform: modbus_controller
+    address: 113
+    name: "State of Charge"
+    unit_of_measurement: "%"
+    register_type: holding
+
+  - platform: modbus_controller
+    address: 114
+    name: "State of Health"
+    unit_of_measurement: "%"
+    register_type: holding
+
   # charger sensors
   - platform: modbus_controller
     modbus_controller_id: must_inverter
     address: 15201
     name: "PV Charger Workstate"
+    icon: mdi:battery-charging-50
     register_type: holding
 
   - platform: modbus_controller
@@ -132,6 +145,7 @@ sensor:
       multiply: 0.1
 
   - platform: modbus_controller
+    id: pv_charging_power
     modbus_controller_id: must_inverter
     address: 15208
     register_type: holding
@@ -139,6 +153,16 @@ sensor:
     unit_of_measurement: "W"
     accuracy_decimals: 1
     icon: mdi:flash
+
+  - platform: total_daily_energy
+    name: "PV charging energy today"
+    icon: mdi:solar-power-variant
+    power_id: pv_charging_power
+    accuracy_decimals: 3
+    unit_of_measurement: kWh
+    restore: true
+    filters:
+      - multiply: 0.001
   
   - platform: modbus_controller
     modbus_controller_id: must_inverter
@@ -239,6 +263,17 @@ sensor:
     icon: mdi:sine-wave
     filters:
       multiply: 0.1
+    on_value_range:
+      - below: !lambda 'return id(inv_grid_chg_start).state;'
+        then:
+          - select.set_index:
+              id: charger_source_priority
+              index: 1  # SNU
+      - above: !lambda 'return id(inv_grid_chg_stop).state;'
+        then:
+          - select.set_index:
+              id: charger_source_priority
+              index: 0  # SCO
 
   - platform: modbus_controller
     modbus_controller_id: must_inverter
@@ -522,6 +557,8 @@ sensor:
   
   - platform: template
     name: "Accumulated load power"
+    state_class: total_increasing
+    device_class: energy
     unit_of_measurement: kWh
     accuracy_decimals: 1
     lambda: !lambda return (id(load_mwh).state * 1000.0 + id(load_kwh).state);
@@ -598,6 +635,13 @@ select:
       "APL (90-280VAC)": 2
       "GEN (Generator)": 3
 
+  - platform: modbus_controller
+    id: solar_use_aim
+    name: "Solar Use Aim"
+    address: 20112
+    optionsmap:
+      "LBU (Load, Battery, Utility)": 0
+      "BLU (Battery, Load, Utility)": 1
 
 number:
   - platform: modbus_controller
@@ -657,3 +701,38 @@ number:
     address: 20132
     value_type: U_WORD
     multiply: 10
+
+  - platform: modbus_controller
+    name: "Max Grid Charger current"
+    unit_of_measurement: "A"
+    address: 20125
+    value_type: U_WORD
+    lambda: "return x * 0.1; "
+    write_lambda: |-
+      return x * 10 ;  
+
+  - platform: template
+    name: "INV Enable grid charge"
+    id: inv_grid_chg_start
+    device_class: voltage
+    unit_of_measurement: "V"
+    min_value: 48
+    max_value: 58.4
+    initial_value: 51
+    step: 0.1
+    optimistic: true
+    restore_value: true
+    mode: box
+    
+  - platform: template
+    name: "INV Disable grid charge"
+    id: inv_grid_chg_stop
+    device_class: voltage
+    unit_of_measurement: "V"
+    min_value: 48
+    max_value: 58.4
+    initial_value: 53
+    step: 0.1
+    optimistic: true
+    restore_value: true
+    mode: box
