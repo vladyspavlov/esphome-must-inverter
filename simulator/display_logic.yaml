@@ -1,5 +1,5 @@
-# Shared display logic for Must Inverter
-# This file is included by both the hardware config and the simulator
+# Display logic for the Must Inverter host simulator (display-simulator.yaml).
+# Mirrors the inline lambda in ../esp32-c6-pv19-display.yaml; keep the two in sync.
 
 lambda: |-
   // Header

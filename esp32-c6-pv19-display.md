@@ -100,7 +100,7 @@ This configuration is a deep overhaul of the base project. Main improvements inc
 
 ### 1. Modern Hardware Support (ESP32-C6)
 * **ESP-IDF Framework:** Unlike the original (Arduino), this version uses the professional ESP-IDF framework, ensuring stable UART operation and Wi-Fi 6 support.
-* **Modbus Optimization:** Increased receive buffer (`rx_buffer_size: 1024`) and tuned delays (`command_throttle`, `send_wait_time`) specifically adapted for MUST inverters.
+* **Modbus Optimization:** Increased receive buffer (`rx_buffer_size: 4096`) and tuned delays (`command_throttle`, `send_wait_time`) specifically adapted for MUST inverters.
 
 ### 2. Local Monitoring (LCD Display)
 * **ST7789 Interface:** Real-time data output directly to the board's screen. You don't need to open Home Assistant to see key parameters:
@@ -114,7 +114,6 @@ This configuration is a deep overhaul of the base project. Main improvements inc
 * **SOC Logic:** The LED changes color (Green/Yellow/Red) based on the battery charge level, with logic protected against invalid values (`nan`) during communication glitches.
 
 ### 4. Enhanced Reliability and Comfort
-* **Static IP:** Configured with a static IP address to prevent connection loss.
 * **PWM Backlight:** Screen brightness is smoothly adjustable via Home Assistant and saved after a reboot.
 * **Stability Tweaks:** Fine-tuned Modbus controller settings to minimize CRC errors in the EMI-heavy environment of the inverter.
 
@@ -127,5 +126,5 @@ This configuration is a deep overhaul of the base project. Main improvements inc
    ```bash
    esphome compile esp32-c6-pv19-display.yaml
    ```
-3. For the initial flash or recovery after a network failure, connect the board via USB and use [ESPHome Web Tools](https://web.io/), selecting the compiled file located at:
-   `.esphome/build/must-ph19/.pioenvs/must-ph19/firmware.factory.bin`
+3. For the initial flash or recovery after a network failure, connect the board via USB and use [ESPHome Web Tools](https://web.esphome.io/), selecting the compiled file located at:
+   `.esphome/build/<name>/.pioenvs/<name>/firmware.factory.bin` (where `<name>` is the value of the `name` substitution).

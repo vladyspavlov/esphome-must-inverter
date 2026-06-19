@@ -53,6 +53,12 @@ This configuration supports all **PV/PH18** and **PV19** series **Must Solar Inv
 - **PV19-6248 EXP** (Thanks to [@sergeysaley](https://github.com/sergeysaley))
 - **PV18-2012 ECO** (Thanks to [@Heet80](https://github.com/Heet80))
 
+## ESP32-C6 with On-Board LCD Display
+
+In addition to the headless configurations, there is a dedicated config for the **[Waveshare ESP32-C6-LCD-1.47](https://www.waveshare.com/esp32-c6-lcd-1.47.htm)** board (`esp32-c6-pv19-display.yaml`). It adds a local **ST7789 status screen** (battery SOC with color coding, PV/load power, battery voltage, IP and Wi-Fi info), a **WS2812 SOC indicator LED**, and live UART activity arrows — so you can read key metrics without opening Home Assistant. An optional **SDL host simulator** (`simulator/`) lets you preview the UI on your computer without flashing hardware.
+
+See the [ESP32-C6 LCD display setup guide](esp32-c6-pv19-display.md) for wiring diagrams and details. Contributed by [@set-st](https://github.com/set-st).
+
 ## Demo Video
 
 Watch a live demonstration on [YouTube](https://youtu.be/0Ef8nHztPZQ).
