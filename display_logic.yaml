@@ -1,0 +1,55 @@
+# Shared display logic for Must Inverter
+# This file is included by both the hardware config and the simulator
+
+lambda: |-
+  // Header
+  it.printf(15, 0, id(font_small), id(color_blue), "Inverter: %s", "${device_name}");
+  
+  // WiFi Signal
+  if (id(wifi_rssi).has_state()) {
+    it.printf(305, 0, id(font_small), id(color_white), TextAlign::TOP_RIGHT, "WiFi: %.0f dBm", id(wifi_rssi).state);
+  }
+
+  // Battery SOC
+  if (id(soc).has_state()) {
+    Color soc_color = id(color_green);
+    if (id(soc).state < 20) soc_color = id(color_red);
+    else if (id(soc).state < 50) soc_color = id(color_yellow);
+    
+    it.printf(160, 60, id(font_large), soc_color, TextAlign::CENTER, "SOC: %.0f%%", id(soc).state);
+  }
+
+  // Power Stats
+  if (id(pv1_power).has_state() || id(pv2_power).has_state()) {
+    float total_pv = (id(pv1_power).has_state() ? id(pv1_power).state : 0) + (id(pv2_power).has_state() ? id(pv2_power).state : 0);
+    it.printf(0, 90, id(font_medium), id(color_yellow), "PV Power: %.0f W", total_pv);
+  }
+  
+  if (id(load_power).has_state()) {
+    it.printf(0, 110, id(font_medium), id(color_white), "Load Power: %.0f W", id(load_power).state);
+  }
+
+  // Work State
+  if (id(inverter_work_state).has_state()) {
+    it.printf(320, 150, id(font_small), id(color_white), TextAlign::BOTTOM_RIGHT, "State: %.0f", id(inverter_work_state).state);
+  }
+  
+  // Battery Voltage at footer
+  if (id(batt_voltage).has_state()) {
+    it.printf(305, 172, id(font_small), id(color_white), TextAlign::BOTTOM_RIGHT, "Battery: %.1f V (%.0f Ah)", id(batt_voltage).state, id(batt_capacity).state);
+  }
+
+  // IP Address
+  if (id(wifi_ip).has_state()) {
+    it.printf(15, 172, id(font_small), id(color_white), TextAlign::BOTTOM_LEFT, "IP: %s", id(wifi_ip).state.c_str());
+  }
+
+  // UART Activity Indicators
+  if (id(uart_tx_active)) {
+    // Red Up Arrow
+    it.filled_triangle(310, 22, 306, 30, 314, 30, id(color_red));
+  }
+  if (id(uart_rx_active)) {
+    // Green Down Arrow
+    it.filled_triangle(310, 42, 306, 34, 314, 34, id(color_green));
+  }

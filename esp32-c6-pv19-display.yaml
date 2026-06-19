@@ -1,27 +1,35 @@
 substitutions:
-  device_name: "Your_device_name"
-  name: "Your_device_name"
-  device_location: "Your_device_location"
-  device_description: "Monitor MUST inverter via RS485"
-  tx_pin: GPIO19
-  rx_pin: GPIO18
+  device_name: "MUST_PH19"
+  name: "must-ph19"
+  device_location: "Tech Room"
+  device_description: "Monitor MUST inverter via RS485 on ESP32-C6"
+  tx_pin: GPIO1
+  rx_pin: GPIO2
+  update_interval: 120s
 
 esphome:
   name: ${name}
-  min_version: 2024.6.0
+  min_version: 2024.11.0
   comment: ${device_location}
 
+# external_components:
+#   - source: github://pr#8032
+#     components: [ modbus, uart, modbus_controller ]
+
 esp32:
-  board: esp32dev
+  board: esp32-c6-devkitc-1
+  variant: esp32c6
   framework:
     type: esp-idf
-
-logger:
 
 wifi:
   networks:
     - ssid: !secret wifi_ssid
       password: !secret wifi_password
+  manual_ip:
+    static_ip: 192.168.1.33
+    subnet: 255.255.255.0
+    gateway: 192.168.1.1
   ap:
     ssid: ${device_name}
     password: !secret ap_password
@@ -38,11 +46,19 @@ ota:
 
 web_server:
   port: 80
+  version: 3
 
 switch:
   - platform: restart
     name: "${device_name} restart"
 
+spi:
+  clk_pin: GPIO7
+  mosi_pin: GPIO6
+  interface: hardware
+
+logger:
+  hardware_uart: USB_SERIAL_JTAG
 
 uart:
   id: mod_bus
@@ -52,248 +68,378 @@ uart:
   stop_bits: 1
   parity: NONE
   data_bits: 8
-  rx_buffer_size: 1024
+  rx_buffer_size: 4096
+  debug:
+    direction: BOTH
+    after:
+      timeout: 100ms
+    sequence:
+      - lambda: |-
+          if (direction == UART_DIRECTION_TX) {
+            id(flash_tx).execute();
+          } else {
+            id(flash_rx).execute();
+          }
 
 modbus:
   id: mod_bus_must
-  send_wait_time: 350ms
+  send_wait_time: 1000ms
 
 modbus_controller:
   - id: must
     address: 0x4
     modbus_id: mod_bus_must
     setup_priority: -10
-    update_interval: 20s
+    update_interval: 30s
+    command_throttle: 500ms
+
+color:
+  - id: color_white
+    red: 100%
+    green: 100%
+    blue: 100%
+  - id: color_red
+    red: 100%
+    green: 0%
+    blue: 0%
+  - id: color_green
+    red: 0%
+    green: 100%
+    blue: 0%
+  - id: color_blue
+    red: 0%
+    green: 50%
+    blue: 100%
+  - id: color_yellow
+    red: 100%
+    green: 100%
+    blue: 0%
+
+font:
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 14
+    bpp: 4
+  - file: "gfonts://Roboto"
+    id: font_medium
+    size: 20
+    bpp: 4
+  - file: "gfonts://Roboto"
+    id: font_large
+    size: 36
+    bpp: 4
+
+display:
+  - platform: st7789v
+    model: Waveshare 1.47in 172X320
+    cs_pin: GPIO14
+    dc_pin: GPIO15
+    reset_pin: GPIO21
+    rotation: 270
+    update_interval: 200ms
+    <<: !include display_logic.yaml
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+      id: wifi_ip
+
+globals:
+  - id: uart_tx_active
+    type: bool
+    initial_value: 'false'
+  - id: uart_rx_active
+    type: bool
+    initial_value: 'false'
+
+script:
+  - id: flash_tx
+    mode: restart
+    then:
+      - lambda: 'id(uart_tx_active) = true;'
+      - delay: 150ms
+      - lambda: 'id(uart_tx_active) = false;'
+  - id: flash_rx
+    mode: restart
+    then:
+      - lambda: 'id(uart_rx_active) = true;'
+      - delay: 150ms
+      - lambda: 'id(uart_rx_active) = false;'
+
+output:
+  - platform: ledc
+    pin: GPIO22
+    id: backlight_pwm
+    frequency: 1000Hz
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: onboard_led
+    rgb_order: RGB
+    pin: GPIO8
+    num_leds: 1
+    chipset: WS2812
+    name: "Onboard LED"
+
+
+  - platform: monochromatic
+    name: "${device_name} Backlight"
+    output: backlight_pwm
+    id: lcd_backlight
+    restore_mode: RESTORE_DEFAULT_ON
 
 binary_sensor:
   # CE: - Charger Errors from 15213 (id:charger_error_message))
   - platform: template
     name: "CE: Charger hardware protection"
-    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,0)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(charger_error_message).state >> 0) & 1);
 
   - platform: template
     name: "CE: Over current"
-    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,1)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(charger_error_message).state >> 1) & 1);
 
   - platform: template
     name: "CE: Current sensor error"
-    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,2)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(charger_error_message).state >> 2) & 1);
 
   - platform: template
     name: "CE: Over temperature"
-    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,3)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(charger_error_message).state >> 3) & 1);
 
   - platform: template
     name: "CE: PV voltage is too high"
-    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,4)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(charger_error_message).state >> 4) & 1);
 
   - platform: template
     name: "CE: PV voltage is too low"
-    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,5)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(charger_error_message).state >> 5) & 1);
 
   - platform: template
     name: "CE: Battery voltage is too high"
-    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,6)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(charger_error_message).state >> 6) & 1);
 
   - platform: template
     name: "CE: Battery voltage is too low"
-    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,7)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(charger_error_message).state >> 7) & 1);
 
   - platform: template
     name: "CE: Current is uncontrollable"
-    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,8)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(charger_error_message).state >> 8) & 1);
 
   - platform: template
     name: "CE: Parameter error"
-    lambda: uint16_t error = id(charger_error_message).state; if (bitRead(error,9)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(charger_error_message).state >> 9) & 1);
 
   # CW: - Charger Warnings from 15214 (id:charger_warning_message))
   - platform: template
     name: "CW: Fan error"
-    lambda: uint16_t warning = id(charger_warning_message).state; if (bitRead(warning,0)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(charger_warning_message).state >> 0) & 1);
 
   # IE: - Inverter Errors from 25261 (id(inverter_error_message_1))
   - platform: template
     name: "IE: Fan is locked when inverter is off"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,0)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 0) & 1);
 
   - platform: template
     name: "IE: Inverter transformer over temperature"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,1)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 1) & 1);
 
   - platform: template
     name: "IE: Battery voltage is too high"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,2)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 2) & 1);
 
   - platform: template
     name: "IE: Battery voltage is too low"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,3)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 3) & 1);
 
   - platform: template
     name: "IE: Output short circuited"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,4)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 4) & 1);
 
   - platform: template
     name: "IE: Inverter output voltage is high"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,5)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 5) & 1);
 
   - platform: template
     name: "IE: Overload time out"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,6)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 6) & 1);
 
   - platform: template
     name: "IE: Inverter bus voltage is too high"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,7)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 7) & 1);
 
   - platform: template
     name: "IE: Bus soft start failed"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,8)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 8) & 1);
 
   - platform: template
     name: "IE: Main relay failed"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,9)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 9) & 1);
 
   - platform: template
     name: "IE: Inverter output voltage sensor error"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,10)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 10) & 1);
 
   - platform: template
     name: "IE: Inverter grid voltage sensor error"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,11)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 11) & 1);
 
   - platform: template
     name: "IE: Inverter output current sensor error"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,12)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 12) & 1);
 
   - platform: template
     name: "IE: Inverter grid current sensor error"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,13)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 13) & 1);
 
   - platform: template
     name: "IE: Inverter load current sensor error"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,14)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 14) & 1);
 
   - platform: template
     name: "IE: Inverter grid over current error"
-    lambda: uint16_t error = id(inverter_error_message_1).state; if (bitRead(error,15)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_1).state >> 15) & 1);
 
   # IE: - Inverter Errors from 25262 (id(inverter_error_message_2))
   - platform: template
     name: "IE: Inverter radiator over temperature"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,0)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 0) & 1);
 
   - platform: template
     name: "IE: Solar charger battery voltage class error"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,1)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 1) & 1);
 
   - platform: template
     name: "IE: Solar charger current sensor error"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,2)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 2) & 1);
 
   - platform: template
     name: "IE: Solar charger current is uncontrollable"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,3)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 3) & 1);
 
   - platform: template
     name: "IE: Inverter grid voltage is low"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,4)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 4) & 1);
 
   - platform: template
     name: "IE: Inverter grid voltage is high"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,5)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 5) & 1);
 
   - platform: template
     name: "IE: Inverter grid under frequency"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,6)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 6) & 1);
 
   - platform: template
     name: "IE: Inverter grid over frequency"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,7)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 7) & 1);
 
   - platform: template
     name: "IE: Inverter over current protection error"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,8)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 8) & 1);
 
   - platform: template
     name: "IE: Inverter bus voltage is too low"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,9)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 9) & 1);
 
   - platform: template
     name: "IE: Inverter soft start failed"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,10)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 10) & 1);
 
   - platform: template
     name: "IE: Over DC voltage in AC output"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,11)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 11) & 1);
 
   - platform: template
     name: "IE: Battery connection is open"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,12)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 12) & 1);
 
   - platform: template
     name: "IE: Inverter control current sensor error"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,13)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 13) & 1);
 
   - platform: template
     name: "IE: Inverter output voltage is too low"
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,14)) { return true; } else { return false; }
-
-  - platform: template
-    name: "IE: "
-    lambda: uint16_t error = id(inverter_error_message_2).state; if (bitRead(error,15)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_error_message_2).state >> 14) & 1);
 
   # IW: - Inverter Warnings from 25265 (id(inverter_warning_message_1))
   - platform: template
     name: "IW: Fan is locked when inverter is on"
-    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,0)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_warning_message_1).state >> 0) & 1);
 
   - platform: template
     name: "IW: Fan2 is locked when inverter is on"
-    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,1)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_warning_message_1).state >> 1) & 1);
 
   - platform: template
     name: "IW: Battery is over-charged"
-    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,2)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_warning_message_1).state >> 2) & 1);
 
   - platform: template
     name: "IW: Low battery"
-    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,3)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_warning_message_1).state >> 3) & 1);
 
   - platform: template
     name: "IW: Overload"
-    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,4)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_warning_message_1).state >> 4) & 1);
 
   - platform: template
     name: "IW: Output power derating"
-    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,5)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_warning_message_1).state >> 5) & 1);
 
   - platform: template
     name: "IW: Solar charger stops due to low battery"
-    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,6)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_warning_message_1).state >> 6) & 1);
 
   - platform: template
     name: "IW: Solar charger stops due to high PV voltage"
-    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,7)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_warning_message_1).state >> 7) & 1);
 
   - platform: template
     name: "IW: Solar charger stops due to over load"
-    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,8)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_warning_message_1).state >> 8) & 1);
 
   - platform: template
     name: "IW: Solar charger over temperature"
-    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,9)) { return true; } else { return false; }
+    lambda: return (bool)(( (uint16_t)id(inverter_warning_message_1).state >> 9) & 1);
 
   - platform: template
     name: "IW: PV charger communication error"
-    lambda: uint16_t warning = id(inverter_error_message_1).state; if (bitRead(warning,10)) { return true; } else { return false; }
-
+    lambda: return (bool)(( (uint16_t)id(inverter_warning_message_1).state >> 10) & 1);
 
 sensor:
+  - platform: wifi_signal
+    name: "${device_name} WiFi Signal"
+    id: wifi_rssi
+    update_interval: 60s
+
+  - platform: modbus_controller
+    address: 10111
+    id: batt_capacity
+    name: "Battery Capacity"
+    unit_of_measurement: "Ah"
+    register_type: holding
+
   - platform: modbus_controller
     address: 113
+    id: soc
     name: "State of Charge"
     unit_of_measurement: "%"
     register_type: holding
+    on_value:
+      then:
+        - lambda: |-
+            if (std::isnan(x)) return;
+            ESP_LOGD("custom", "SOC Value for LED: %.1f", x);
+            auto call = id(onboard_led).turn_on();
+            if (x < 20) {
+              call.set_rgb(1.0, 0.0, 0.0);
+            } else if (x < 50) {
+              call.set_rgb(1.0, 1.0, 0.0);
+            } else {
+              call.set_rgb(0.0, 1.0, 0.0);
+            }
+            call.perform();
 
   - platform: modbus_controller
     address: 15201
@@ -314,50 +460,30 @@ sensor:
   - platform: modbus_controller
     id: inverter_error_message_1
     address: 25261
-#    name: "Inverter Error message 1"
     register_type: holding
     internal: true
 
   - platform: modbus_controller
     id: inverter_error_message_2
     address: 25262
-#    name: "Inverter Error message 2"
-    register_type: holding
-    internal: true
-
-  - platform: modbus_controller
-    id: inverter_error_message_3
-    address: 25263
-#    name: "Inverter Error message 3"
     register_type: holding
     internal: true
 
   - platform: modbus_controller
     id: inverter_warning_message_1
     address: 25265
-#    name: "Inverter Warning message 1"
-    register_type: holding
-    internal: true
-
-  - platform: modbus_controller
-    id: inverter_warning_message_2
-    address: 25266
-#    name: "Inverter Warning message 2"
     register_type: holding
     internal: true
 
   - platform: modbus_controller
     id: charger_error_message
     address: 15213
-    bitmask: 0x3ff 
-#    name: "Charger Error message"
     register_type: holding
     internal: true
 
   - platform: modbus_controller
     id: charger_warning_message
     address: 15214
-#    name: "Charger Warning message"
     register_type: holding
     internal: true
 
@@ -414,6 +540,7 @@ sensor:
   - platform: modbus_controller
     address: 15208
     register_type: holding
+    id: pv1_power
     name: "PV1 Charger power"
     unit_of_measurement: "W"
     device_class: power
@@ -423,6 +550,7 @@ sensor:
   - platform: modbus_controller
     address: 16208
     register_type: holding
+    id: pv2_power
     name: "PV2 Charger power"
     unit_of_measurement: "W"
     device_class: power
@@ -442,14 +570,12 @@ sensor:
   - platform: modbus_controller
     address: 15217
     register_type: holding
-    # name: "Accumulated charger power MWh"
     id: charger_total_mwh
     internal: true
 
   - platform: modbus_controller
     address: 15218
     register_type: holding
-    # name: "Accumulated charger power kWh"
     id: charger_total_kwh
     internal: true
     filters:
@@ -466,11 +592,13 @@ sensor:
 
   - platform: modbus_controller
     address: 25201
+    id: inverter_work_state
     register_type: holding
     name: "Inverter Work state"
 
   - platform: modbus_controller
     address: 25205
+    id: batt_voltage
     name: "Battery voltage"
     register_type: holding
     unit_of_measurement: "V"
@@ -478,17 +606,6 @@ sensor:
     icon: mdi:sine-wave
     filters:
       multiply: 0.1
-    on_value_range:
-      - below: !lambda 'return id(inv_grid_chg_start).state;'
-        then:
-          - select.set_index:
-              id: charger_source_priority
-              index: 1  # SNU
-      - above: !lambda 'return id(inv_grid_chg_stop).state;'
-        then:
-          - select.set_index:
-              id: charger_source_priority
-              index: 0  # SCO
 
   - platform: modbus_controller
     address: 25206
@@ -530,6 +647,7 @@ sensor:
 
   - platform: modbus_controller
     address: 25215
+    id: load_power
     name: "Load power"
     register_type: holding
     unit_of_measurement: "W"
@@ -568,14 +686,12 @@ sensor:
   - platform: modbus_controller
     address: 25247
     register_type: holding
-    # name: "Accumulated discharger power MWh"
     id: discharger_total_mwh
     internal: true
 
   - platform: modbus_controller
     address: 25248
     register_type: holding
-    # name: "Accumulated discharger power kWh"
     id: discharger_total_kwh
     internal: true
     filters:
@@ -588,129 +704,6 @@ sensor:
     state_class: total_increasing
     lambda: |-
      return (id(discharger_total_mwh).state * 1000.0 + id(discharger_total_kwh).state );
-    accuracy_decimals: 1
-
-  - platform: modbus_controller
-    address: 25245
-    register_type: holding
-    # name: "Accumulated charger power MWh"
-    id: inv_charger_total_mwh
-    internal: true
-
-  - platform: modbus_controller
-    address: 25246
-    register_type: holding
-    # name: "Accumulated charger power kWh"
-    id: inv_charger_total_kwh
-    internal: true
-    filters:
-      multiply: 0.1
-
-  - platform: template
-    name: "Accumulated INV charger power"
-    unit_of_measurement: kWh
-    device_class: energy
-    state_class: total_increasing
-    lambda: |-
-     return (id(inv_charger_total_mwh).state * 1000.0 + id(inv_charger_total_kwh).state );
-    accuracy_decimals: 1
-
-  - platform: modbus_controller
-    address: 25249
-    register_type: holding
-    # name: "Accumulated buy power MWh"
-    id: buy_mwh
-    internal: true
-
-  - platform: modbus_controller
-    address: 25250
-    register_type: holding
-    # name: "Accumulated buy power kWh"
-    id: buy_kwh
-    internal: true
-    filters:
-      multiply: 0.1
-
-  - platform: template
-    name: "Accumulated buy power"
-    unit_of_measurement: kWh
-    device_class: energy
-    state_class: total_increasing
-    lambda: |-
-     return (id(buy_mwh).state * 1000.0 + id(buy_kwh).state );
-    accuracy_decimals: 1
-
-  - platform: modbus_controller
-    address: 25251
-    register_type: holding
-    # name: "Accumulated sell power MWh"
-    id: sell_mwh
-
-  - platform: modbus_controller
-    address: 25252
-    register_type: holding
-    # name: "Accumulated sell power kWh"
-    id: sell_kwh
-    filters:
-      multiply: 0.1
-
-  - platform: template
-    name: "Accumulated sell power"
-    unit_of_measurement: kWh
-    device_class: energy
-    state_class: total_increasing
-    lambda: |-
-     return (id(sell_mwh).state * 1000.0 + id(sell_kwh).state );
-    accuracy_decimals: 1
-
-  - platform: modbus_controller
-    address: 25253
-    register_type: holding
-    # name: "Accumulated load power MWh"
-    id: load_mwh
-    internal: true
-
-  - platform: modbus_controller
-    address: 25254
-    register_type: holding
-    # name: "Accumulated load power kWh"
-    id: load_kwh
-    internal: true
-    filters:
-      multiply: 0.1
-
-  - platform: template
-    name: "Accumulated load power"
-    unit_of_measurement: kWh
-    device_class: energy
-    state_class: total_increasing
-    lambda: |-
-     return (id(load_mwh).state * 1000.0 + id(load_kwh).state );
-    accuracy_decimals: 1
-
-  - platform: modbus_controller
-    address: 25259
-    register_type: holding
-    # name: "Accumulated grid charge power MWh"
-    id: grid_charge_mwh
-    internal: true
-
-  - platform: modbus_controller
-    address: 25260
-    register_type: holding
-    # name: "Accumulated grid charge power kWh"
-    id: grid_charge_kwh
-    internal: true
-    filters:
-      multiply: 0.1
-
-  - platform: template
-    name: "Accumulated grid charge power"
-    unit_of_measurement: kWh
-    device_class: energy
-    state_class: total_increasing
-    lambda: |-
-     return (id(grid_charge_mwh).state * 1000.0 + id(grid_charge_kwh).state );
     accuracy_decimals: 1
 
   - platform: modbus_controller
@@ -760,32 +753,6 @@ select:
       "BLU (Battery, Load, Utility)": 1        # select index 1
 
 number:
-  - platform: template
-    name: "INV Enable grid charge"
-    id: inv_grid_chg_start
-    device_class: voltage
-    unit_of_measurement: "V"
-    min_value: 48
-    max_value: 58.4
-    initial_value: 51
-    step: 0.1
-    optimistic: true
-    restore_value: true
-    mode: box
-
-  - platform: template
-    name: "INV Disable grid charge"
-    id: inv_grid_chg_stop
-    device_class: voltage
-    unit_of_measurement: "V"
-    min_value: 48
-    max_value: 58.4
-    initial_value: 53
-    step: 0.1
-    optimistic: true
-    restore_value: true
-    mode: box
-
   - platform: modbus_controller
     id: batt_float_voltage
     name: "Float voltage"
@@ -862,11 +829,3 @@ number:
     lambda: "return x * 0.1; "
     write_lambda: |-
       return x * 10 ;
-
-  - platform: modbus_controller
-    id: system_settings
-#    name: "System Settings"
-    address: 20142
-    value_type: U_WORD
-    internal: True
-    

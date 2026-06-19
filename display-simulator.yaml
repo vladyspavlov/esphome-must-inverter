@@ -1,0 +1,132 @@
+esphome:
+  name: display-simulator
+
+host:
+
+# Simulation requires libsdl2-dev installed on the host system
+# On macOS: brew install sdl2
+# On Ubuntu: sudo apt-get install libsdl2-dev
+
+substitutions:
+  device_name: "SIMULATOR"
+
+# Mocking colors from the original file
+color:
+  - id: color_white
+    red: 100%
+    green: 100%
+    blue: 100%
+  - id: color_red
+    red: 100%
+    green: 0%
+    blue: 0%
+  - id: color_green
+    red: 0%
+    green: 100%
+    blue: 0%
+  - id: color_blue
+    red: 0%
+    green: 50%
+    blue: 100%
+  - id: color_yellow
+    red: 100%
+    green: 100%
+    blue: 0%
+
+font:
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 14
+    bpp: 4
+  - file: "gfonts://Roboto"
+    id: font_medium
+    size: 20
+    bpp: 4
+  - file: "gfonts://Roboto"
+    id: font_large
+    size: 36
+    bpp: 4
+
+# Mock sensors to control the display state during simulation
+sensor:
+  - platform: template
+    name: "Mock RSSI"
+    id: wifi_rssi
+    unit_of_measurement: "dBm"
+  - platform: template
+    name: "Mock SOC"
+    id: soc
+    unit_of_measurement: "%"
+  - platform: template
+    name: "Mock PV1 Power"
+    id: pv1_power
+    unit_of_measurement: "W"
+  - platform: template
+    name: "Mock PV2 Power"
+    id: pv2_power
+    unit_of_measurement: "W"
+  - platform: template
+    name: "Mock Load Power"
+    id: load_power
+    unit_of_measurement: "W"
+  - platform: template
+    name: "Mock Inverter Work State"
+    id: inverter_work_state
+  - platform: template
+    name: "Mock Battery Voltage"
+    id: batt_voltage
+    unit_of_measurement: "V"
+  - platform: template
+    name: "Mock Battery Capacity"
+    id: batt_capacity
+    unit_of_measurement: "Ah"
+
+text_sensor:
+  - platform: template
+    name: "Mock IP"
+    id: wifi_ip
+
+globals:
+  - id: uart_tx_active
+    type: bool
+    initial_value: 'false'
+  - id: uart_rx_active
+    type: bool
+    initial_value: 'false'
+
+script:
+  - id: flash_tx
+    then:
+      - lambda: 'id(uart_tx_active) = true;'
+      - delay: 200ms
+      - lambda: 'id(uart_tx_active) = false;'
+  - id: flash_rx
+    then:
+      - lambda: 'id(uart_rx_active) = true;'
+      - delay: 200ms
+      - lambda: 'id(uart_rx_active) = false;'
+
+# SDL Display for host simulation
+display:
+  - platform: sdl
+    dimensions: 320x172
+    update_interval: 100ms
+    <<: !include display_logic.yaml
+
+# Automated value simulation to see it in action
+interval:
+  - interval: 3s
+    then:
+      - script.execute: flash_tx
+      - delay: 500ms
+      - script.execute: flash_rx
+      - lambda: |-
+          id(wifi_rssi).publish_state(-65);
+          id(soc).publish_state(95);
+          id(pv1_power).publish_state(450);
+          id(pv2_power).publish_state(320);
+          id(load_power).publish_state(1200);
+          id(inverter_work_state).publish_state(2);
+          id(batt_voltage).publish_state(54.2);
+          id(wifi_ip).publish_state("192.168.1.33");
+          id(batt_capacity).publish_state(100);
