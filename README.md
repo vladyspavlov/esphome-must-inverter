@@ -33,6 +33,19 @@ This repository provides an optimized **ESPHome YAML configuration** for monitor
 
   ![Illustrative examples of an ESP32 Ethernet board, an RS485-to-UART board, and a four-wire USB-A cable](images/hardware-examples.svg)
 
+  <details>
+  <summary>Example product photos</summary>
+
+  **WT32-ETH01 board**
+
+  <img src="images/wt32-eth01.webp" alt="WT32-ETH01 board example" width="400">
+
+  **USB-A extension cable**
+
+  <img src="images/usb-extension.webp" alt="USB-A extension cable example" width="400">
+
+  </details>
+
 - **Software**  
   - **ESPHome**: [Official website](https://esphome.io/)  
   - **Home Assistant** (Optional but recommended): For advanced automation and monitoring features.
