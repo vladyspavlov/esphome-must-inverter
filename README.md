@@ -25,11 +25,13 @@ This repository provides an optimized **ESPHome YAML configuration** for monitor
 
 - **Hardware**  
   - **ESP32 Board**: Recommended for robust Wi-Fi/Bluetooth performance (ESP8266 also supported).  
-    - Example: [WT32-ETH on AliExpress](https://www.aliexpress.com/item/1005006074972994.html)  
+    - Example: [WT32-ETH01](https://www.seeedstudio.com/Ethernet-module-based-on-ESP32-series-WT32-ETH01-p-4736.html) (requires a USB-to-serial adapter for initial flashing)
   - **RS485 to UART Board**: For reliable Modbus communication.  
     - Example: [AliExpress](https://www.aliexpress.com/item/1005001621746811.html)  
-  - **USB Cable (Optional)**: Connect via USB if supported by your inverter model.  
-    - Example: [AliExpress](https://www.aliexpress.com/item/1005002358382000.html) (works with PH(PV)18-5248 Pro, may vary for others)
+  - **USB-A Cable (Optional)**: For inverters with RS485 on a USB-shaped port, use a USB-A male cable with four exposed wires.
+    - Example: [USB-A four-wire cable](https://globaleparts.com/products/2pcs-short-usb-a-male-4-pin-bare-wire-11inch-usb-5v-2a-4-pin-pigtail-open-end-power-and-data-cable-for-usb-equipment-installed-or-replacement-repair-diy-cable). Check your inverter’s port pinout and the cable wiring before connecting. You still need an RS485 to UART board; the port may not carry standard USB signals.
+
+  ![Illustrative examples of an ESP32 Ethernet board, an RS485-to-UART board, and a four-wire USB-A cable](images/hardware-examples.svg)
 
 - **Software**  
   - **ESPHome**: [Official website](https://esphome.io/)  
@@ -55,7 +57,7 @@ This configuration supports all **PV/PH18** and **PV19** series **Must Solar Inv
 
 ## ESP32-C6 with On-Board LCD Display
 
-In addition to the headless configurations, there is a dedicated config for the **[Waveshare ESP32-C6-LCD-1.47](https://www.waveshare.com/esp32-c6-lcd-1.47.htm)** board (`esp32-c6-pv19-display.yaml`). It adds a local **ST7789 status screen** (battery SOC with color coding, PV/load power, battery voltage, IP and Wi-Fi info), a **WS2812 SOC indicator LED**, and live UART activity arrows — so you can read key metrics without opening Home Assistant. An optional **SDL host simulator** (`simulator/`) lets you preview the UI on your computer without flashing hardware.
+In addition to the headless configurations, there is a dedicated config for the **[Waveshare ESP32-C6-LCD-1.47](https://www.waveshare.com/esp32-c6-lcd-1.47.htm)** board (`esp32-c6-pv19-display.yaml`). It adds a local **ST7789 status screen** (battery SOC with color coding, PV/load power, battery voltage, IP and Wi-Fi info), a **WS2812 SOC indicator LED**, and live UART activity arrows, so you can read key metrics without opening Home Assistant. An optional **SDL host simulator** (`simulator/`) lets you preview the UI on your computer without flashing hardware.
 
 See the [ESP32-C6 LCD display setup guide](esp32-c6-pv19-display.md) for wiring diagrams and details. Contributed by [@set-st](https://github.com/set-st).
 
