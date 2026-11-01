@@ -25,11 +25,11 @@ This repository provides an optimized **ESPHome YAML configuration** for monitor
 
 - **Hardware**  
   - **ESP32 Board**: Recommended for robust Wi-Fi/Bluetooth performance (ESP8266 also supported).  
-    - Example: [WT32-ETH01](https://www.seeedstudio.com/Ethernet-module-based-on-ESP32-series-WT32-ETH01-p-4736.html) (requires a USB-to-serial adapter for initial flashing)
+    - Example: WT32-ETH01 ([AliExpress](https://www.aliexpress.com/item/1005010340645528.html), [Seeed Studio](https://www.seeedstudio.com/Ethernet-module-based-on-ESP32-series-WT32-ETH01-p-4736.html)). Select the WT32-ETH01 version; a USB-to-serial adapter may be needed for initial flashing.
   - **RS485 to UART Board**: For reliable Modbus communication.  
     - Example: [AliExpress](https://www.aliexpress.com/item/1005001621746811.html)  
   - **USB-A Cable (Optional)**: For inverters with RS485 on a USB-shaped port, use a USB-A male cable with four exposed wires.
-    - Example: [USB-A four-wire cable](https://globaleparts.com/products/2pcs-short-usb-a-male-4-pin-bare-wire-11inch-usb-5v-2a-4-pin-pigtail-open-end-power-and-data-cable-for-usb-equipment-installed-or-replacement-repair-diy-cable). Check your inverter’s port pinout and the cable wiring before connecting. You still need an RS485 to UART board; the port may not carry standard USB signals.
+    - Example: [USB-A extension cable on AliExpress](https://www.aliexpress.com/item/1005007915013962.html) (cut off the female end) or a [four-wire pigtail](https://globaleparts.com/products/2pcs-short-usb-a-male-4-pin-bare-wire-11inch-usb-5v-2a-4-pin-pigtail-open-end-power-and-data-cable-for-usb-equipment-installed-or-replacement-repair-diy-cable). Check your inverter’s port pinout and the cable wiring before connecting. You still need an RS485 to UART board; the port may not carry standard USB signals.
 
   ![Illustrative examples of an ESP32 Ethernet board, an RS485-to-UART board, and a four-wire USB-A cable](images/hardware-examples.svg)
 
